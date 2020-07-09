@@ -66,7 +66,7 @@ Middleware<AppState> _updateDataToApi(AppState state) {
     next(action);
 
     if (action is ItemCompletedAction) {
-      final item = action.item.copyWith(completed: true);
+      final item = action.item.copyWith(completed: !action.item.completed);
       _itemService.updateItem(item).then((value) => _fetchItems(store));
     }
   };
