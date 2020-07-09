@@ -35,13 +35,40 @@ class ItemsService {
     var response = await http.post(postApiUrl,
         body: convert.json.encode(newItem.toJson()), headers: headers);
 
+    return handleApiResponse<bool>(true, response.statusCode);
+  }
+
+  Future<APIResponse<bool>> deleteItem(Item item) async {
+    final deleteApiUrl = "$apiUrl/Items/${item.id}";
+    var response = await http.delete(deleteApiUrl, headers: headers);
+
+    return handleApiResponse<bool>(true, response.statusCode);
+  }
+
+  Future<APIResponse<bool>> updateItem(Item item) async {
+    final updateApiUrl = "$apiUrl/Items/${item.id}";
+    var response = await http.put(updateApiUrl,
+        body: convert.json.encode(item.toJson()), headers: headers);
+
+    return handleApiResponse<bool>(true, response.statusCode);
+  }
+
+  Future<APIResponse<bool>> removeAllItems() async {
+    final updateApiUrl = "$apiUrl/Items/clear";
+    var response = await http.get(updateApiUrl, headers: headers);
+
+    return handleApiResponse<bool>(true, response.statusCode);
+  }
+
+  APIResponse<T> handleApiResponse<T>(T data, int apiStatusCode,
+      {int expectedStatuCode = 200}) {
     try {
-      if (response.statusCode == 200) {
-        return APIResponse<bool>(data: true);
+      if (apiStatusCode == expectedStatuCode) {
+        return APIResponse<T>(data: data);
       }
-      return APIResponse<bool>(error: true, errorMessage: 'An error occured');
+      return APIResponse<T>(error: true, errorMessage: 'An error occured');
     } catch (error) {
-      return APIResponse<bool>(error: true, errorMessage: 'An error occured');
+      return APIResponse<T>(error: true, errorMessage: 'An error occured');
     }
   }
 

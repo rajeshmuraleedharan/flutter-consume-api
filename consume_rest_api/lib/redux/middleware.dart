@@ -11,21 +11,21 @@ import '../redux/actions.dart';
 List<Middleware<AppState>> appStateMiddleware(
     [AppState state = const AppState(items: [])]) {
   final loadFromPrefs = _loadFromPrefs(state);
-  final saveToPrefs = _saveToPrefs(state);
+  final clearAllItems = _clearAllItems(state);
   final saveToApi = _saveToApi(state);
+  final deleteFromApi = _deleteFromApi(state);
+  final updateDataToApi = _updateDataToApi(state);
 
   return [
     TypedMiddleware<AppState, AddItemAction>(saveToApi),
-    TypedMiddleware<AppState, RemoveItemAction>(saveToPrefs),
-    TypedMiddleware<AppState, RemoveItemsAction>(saveToPrefs),
-    TypedMiddleware<AppState, ItemCompletedAction>(saveToPrefs),
+    TypedMiddleware<AppState, RemoveItemAction>(deleteFromApi),
+    TypedMiddleware<AppState, RemoveItemsAction>(clearAllItems),
+    TypedMiddleware<AppState, ItemCompletedAction>(updateDataToApi),
     TypedMiddleware<AppState, GetItemsAction>(loadFromPrefs),
   ];
 }
 
 Middleware<AppState> _loadFromPrefs(AppState state) {
-  final _itemService = ServiceLocator.getService<ItemsService>();
-
   return (Store<AppState> store, action, NextDispatcher next) {
     next(action);
 
@@ -47,13 +47,38 @@ Middleware<AppState> _saveToApi(AppState state) {
   };
 }
 
-Middleware<AppState> _saveToPrefs(AppState state) {
-  //final _itemService = ServiceLocator.getService<ItemsService>();
+Middleware<AppState> _deleteFromApi(AppState state) {
+  final _itemService = ServiceLocator.getService<ItemsService>();
 
   return (Store<AppState> store, action, NextDispatcher next) {
     next(action);
 
-    ManagePrefsUtil.saveToPrefs(store.state);
+    if (action is RemoveItemAction) {
+      _itemService.deleteItem(action.item).then((value) => _fetchItems(store));
+    }
+  };
+}
+
+Middleware<AppState> _updateDataToApi(AppState state) {
+  final _itemService = ServiceLocator.getService<ItemsService>();
+
+  return (Store<AppState> store, action, NextDispatcher next) {
+    next(action);
+
+    if (action is ItemCompletedAction) {
+      final item = action.item.copyWith(completed: true);
+      _itemService.updateItem(item).then((value) => _fetchItems(store));
+    }
+  };
+}
+
+Middleware<AppState> _clearAllItems(AppState state) {
+  final _itemService = ServiceLocator.getService<ItemsService>();
+
+  return (Store<AppState> store, action, NextDispatcher next) {
+    next(action);
+
+    _itemService.removeAllItems().then((value) => _fetchItems(store));
   };
 }
 

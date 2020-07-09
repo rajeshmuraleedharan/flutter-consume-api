@@ -3,3 +3,6 @@
 ################################################################################
 
 /.vs
+/rest-api/.vs/rest-api
+/rest-api/bin/Debug/netcoreapp3.1
+/rest-api/obj

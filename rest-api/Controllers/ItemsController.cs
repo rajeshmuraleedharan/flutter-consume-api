@@ -43,7 +43,7 @@ namespace rest_api.Controllers
         {
             var items = await GetItemsAsync();
             var clonedList = items.ToList();
-            value.Id = clonedList.Max(i => i.Id) + 1;
+            value.Id = (clonedList.Count > 0 ? clonedList.Max(i => i.Id) : 0) + 1;
             clonedList.Add(value);
             await UpdateItemsAsync(clonedList);
         }
@@ -76,6 +76,12 @@ namespace rest_api.Controllers
             await UpdateItemsAsync(clonedList);
         }
 
+        [HttpGet("clear")]
+        public async Task ClearAsync()
+        {
+            await _distributedCache.RemoveAsync("items_store");
+        }
+
         private async Task<IEnumerable<Item>> GetItemsAsync()
         {
             var dataFromCache = await _distributedCache.GetStringAsync("items_store");
@@ -93,9 +99,7 @@ namespace rest_api.Controllers
         }
 
         private IEnumerable<Item> GetIntialData() =>
-            new List<Item> { new Item { Id =1, Body = "Test1", Completed = false },
-            new Item { Id =2, Body = "Test2", Completed = false },
-            new Item { Id =3, Body = "Test3", Completed = false }};
+            new List<Item>();
 
     }
 }
